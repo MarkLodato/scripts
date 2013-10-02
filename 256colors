@@ -1,12 +1,16 @@
-#!/bin/zsh
+#!/bin/bash
 # Print all 256 Xterm color numbers.
 
 print_colors() {
     width="$1"
     shift
-    print -P $(printf '%%F{%1$d}%1$'$width'd%%f ' "$@")
+    while test $# -gt 0; do
+        printf '\e[38;5;%dm%'$width'd\e[m ' "$1" "$1"
+        shift
+    done
+    echo
 }
-format=
+
 print_colors 2 {0..7}
 print_colors 2 {8..15}
 print_colors 3 {16..21} {52..57} {88..93}
