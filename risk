@@ -1,0 +1,61 @@
+#!/usr/bin/python
+"""Compute the number of armies needed in Risk.
+
+USAGE: %prog <n>... [--keep=<keep>]
+
+In the game of Risk, compute the number of armies you are expected to need to
+attack another country that has <n> armies and leave <keep> armies behind,
+assuming you never want to attack with fewer than 3 armies.  You may give
+multiple <n>, in which case it is assumed you go on a march.
+
+For example `risk --keep=2 5 3 1' computes the expected number armies you need
+in one country if you wanted to attack three countries in a row---each having
+5, 3, and 1 armies, respectively---leaving at least 2 of your armies behind in
+each conquered country.
+"""
+
+import optparse
+
+# Stuff from http://www.kent.ac.uk/smsas/personal/odl/riskfaq.htm#Prob
+
+def loss(n):
+  """The expected number of armies the attacker will lose if the defender has
+  `n` armies and the attacker has enough to always attack with three."""
+  return 0.8534144 * n - 0.2213413 * (1 - (-0.525359)**n)
+
+def loss_inc(n):
+  return loss(n) - loss(n-1)
+
+def takeover_approx(armies_list):
+  """An approximation of how many armies are needed to wipe out countries with
+  the given defenders."""
+  return sum([
+      5/6. * sum(armies_list),  # number of defending armies
+      7/9. * len(armies_list),  # number of territories
+      -1/9. * sum(x==1 for x in armies_list),  # single army bonus
+      1/18. * sum(x==2 for x in armies_list),  # two army penalty
+      3,  # so we have a full attack
+      ])
+
+def main():
+  title, usage, desc = globals()['__doc__'].split('\n\n', 2)
+  
+  p = optparse.OptionParser(usage=usage, description=desc)
+  p.add_option('--keep', type='int', default=2,
+               help='armies to keep in each territory')
+  opts, args = p.parse_args()
+  if not args:
+      p.error("At least one <n> is needed.  Use `--help' for more info.")
+
+  armies = [int(x) for x in args]
+  total = 3 + sum(opts.keep + loss(n) for n in armies)
+  print 'Total armies expected needed:', total, '+ extra for safety'
+  print
+  print 'Defender      Loss  Inc. Loss  (not counting %d army to occupy)' % (
+      opts.keep)
+  print '========  ========  ========='
+  for n in armies:
+    print '%8d  %4f  %9f' % (n, loss(n), loss_inc(n))
+
+if __name__ == "__main__":
+  main()
