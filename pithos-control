@@ -1,0 +1,56 @@
+#!/bin/sh
+# A script to control Pithos.  This is easier to use than dbus-send, and it
+# also includes discrete play and pause commands, which are not available
+# directly via dbus.
+
+usage() {
+    cat >&2 <<EOF
+USAGE: $0 <command>
+
+Control Pithos via D-Bus.
+
+Available Commands:
+    Control:
+        play
+        pause
+        play/pause
+        skip
+        love
+        ban
+        tired
+        raise-window
+    Query:
+        is-playing
+        current-song
+EOF
+    exit 1
+}
+
+send_command() {
+    dbus-send \
+        --print-reply \
+        --dest=net.kevinmehall.Pithos \
+        /net/kevinmehall/Pithos \
+        net.kevinmehall.Pithos."$1" \
+        || exit $?
+}
+
+is_playing() {
+    send_command IsPlaying | grep -q 'boolean true'
+}
+
+test $# -eq 1 || usage
+
+case "$1" in
+    play)         is_playing || send_command PlayPause ;;
+    pause)        is_playing && send_command PlayPause ;;
+    play/pause)   send_command PlayPause ;;
+    skip)         send_command SkipSong ;;
+    love)         send_command LoveCurrentSong ;;
+    tired)        send_command TiredCurrentSong ;;
+    ban)          send_command BanCurrentSong ;;
+    raise-window) send_command Present ;;
+    is-playing)   send_command IsPlaying ;;
+    current-song) send_command GetCurrentSong ;;
+    *)            usage ;;
+esac
