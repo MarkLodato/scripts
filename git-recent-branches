@@ -1,0 +1,23 @@
+#!/bin/bash
+# Copyright 02013 Mark Lodato <lodato@google.com>
+# Released under the MIT license; see LICENSE for details.
+
+# Show git branches and how old each is, sorted by commit date.
+#
+# Does not show branches that git considers "months" or "years" old, except the
+# current branch.  Also does not show any branch beginning with "junk/".
+
+current_branch="$(git symbolic-ref --short -q HEAD)"
+git for-each-ref --sort=committerdate refs/heads \
+  --format='%(refname:short)|%(committerdate:relative)' \
+  | perl -ne "print if not m{^junk/|(year|month)s? ago} or m{^$current_branch}" \
+  | while IFS='|' read branch date
+    do
+      start='  '
+      end=''
+      if [[ $branch = $current_branch ]]; then
+        start='* \e[32m'
+        end='\e[0m'
+      fi
+      printf "$start%-30s %s$end\\n" "$branch" "$date"
+    done
