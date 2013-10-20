@@ -1,11 +1,12 @@
 #!/bin/bash
-# Copyright 02013 Mark Lodato <lodato@google.com>
-# Released under the MIT license; see LICENSE for details.
-
+#
 # Show git branches and how old each is, sorted by commit date.
 #
 # Does not show branches that git considers "months" or "years" old, except the
 # current branch.  Also does not show any branch beginning with "junk/".
+#
+# Copyright 2013 Mark Lodato <lodato@google.com>
+# Released under the MIT license; see LICENSE for details.
 
 current_branch="$(git symbolic-ref --short -q HEAD)"
 git for-each-ref --sort=committerdate refs/heads \

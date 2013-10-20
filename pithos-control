@@ -1,7 +1,11 @@
 #!/bin/sh
+#
 # A script to control Pithos.  This is easier to use than dbus-send, and it
 # also includes discrete play and pause commands, which are not available
 # directly via dbus.
+#
+# Copyright 2013 Mark Lodato <lodato@google.com>
+# Released under the MIT license; see LICENSE for details.
 
 usage() {
     cat >&2 <<EOF

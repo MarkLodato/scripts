@@ -1,4 +1,6 @@
 #!/bin/zsh
+# Copyright 2013 Mark Lodato <lodato@google.com>
+# Released under the MIT license; see LICENSE for details.
 
 SUBDIRECTORY_OK=Yes
 OPTIONS_KEEPDASHDASH=

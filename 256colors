@@ -1,5 +1,13 @@
 #!/bin/bash
+#
 # Print all 256 Xterm color numbers.
+#
+# To actually set one of these colors in the terminal, output
+#     ESC [ 3 8 ; 5 ; <number> m
+# Replace "3" with "4" to set the background.
+#
+# Copyright 2013 Mark Lodato <lodato@google.com>
+# Released under the MIT license; see LICENSE for details.
 
 print_colors() {
     width="$1"

@@ -1,4 +1,7 @@
 #!/usr/bin/python
+# Copyright 2013 Mark Lodato <lodato@google.com>
+# Released under the MIT license; see LICENSE for details.
+
 """Compute the number of armies needed in Risk.
 
 USAGE: %prog <n>... [--keep=<keep>]
