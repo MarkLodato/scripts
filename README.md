@@ -17,3 +17,9 @@ $ git recent-branches
   other-branch                   4 days ago
 * <span style="color: #00cd00">master                         8 minutes ago</span>
 </pre>
+
+### COPYRIGHT
+
+Copyright 2013 Mark Lodato <lodatom@gmail.com>
+
+Released under the MIT license.
