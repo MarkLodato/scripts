@@ -1,28 +1,25 @@
 #!/bin/bash
-#
-# Show git branches and how old each is, sorted by commit date.
-#
-# Does not show old branches or those beginning with "junk/", but always shows
-# the current branch.
-#
 # Copyright 2013 Mark Lodato <lodato@google.com>
 # Released under the MIT license; see LICENSE for details.
 
-# TODO Default since from git-config.
-since='3 months ago'
-# TODO Default ignore_re from git-config.
-ignore_re='^junk/'
+OPTIONS_SPEC="\
+git recent-branches
+
+Show branches and how old each is, sorted by commit date.
+
+Default values for the below flags can be set in .gitconfig with
+'recent-branch.since' or 'recent-branch.ignore'.
+--
+since=          ignore branches older than this date
+ignore=         ignore branches whose names match this GNU regexp
+"
 
 SUBDIRECTORY_OK=Yes
 OPTIONS_KEEPDASHDASH=
-OPTIONS_SPEC="\
-git recent-branches
---
-since=          ignore branches whose most recent commit was older than this
-ignore=         ignore branches whose names match this regular expression
-"
-
 . git-sh-setup
+
+since=$(git config --get recent-branches.since)
+ignore_re=$(git config --get recent-branches.ignore)
 
 while test $# != 0
 do
