@@ -40,10 +40,21 @@ if [[ $# -ne 0 ]]; then
   usage
 fi
 
-# TODO validate $since by comparing to "now".
+parse_date() {
+  git rev-parse --since="$*" | sed -e 's/^--max-age=//'
+}
 
-min_timestamp=$(git rev-parse --since="$since" | sed -e 's/^--max-age=//')
+min_timestamp=$(parse_date "$since")
 current_branch=$(git symbolic-ref --short -q HEAD)
+
+# Make sure that the date format is not completely invalid.  `git rev-parse
+# --since=...` ignores pieces not understand, replacing those pieces with those
+# corresponding to now.  This won't catch things like "yesterday non" (instead
+# of "noon"), but it's better than nothing.
+if [[ min_timestamp -eq $(parse_date now) ]]; then
+  echo "error: invalid timestamp for --since: $since"
+  exit 2
+fi
 
 git for-each-ref refs/heads --sort=committerdate \
   --format='%(refname:short)|%(committerdate:raw)|%(committerdate:relative)' \
