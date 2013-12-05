@@ -44,7 +44,11 @@ parse_date() {
   git rev-parse --since="$*" | sed -e 's/^--max-age=//'
 }
 
-min_timestamp=$(parse_date "$since")
+if [[ -z $since ]]; then
+  min_timestamp=0
+else
+  min_timestamp=$(parse_date "$since")
+fi
 current_branch=$(git symbolic-ref --short -q HEAD)
 
 # Make sure that the date format is not completely invalid.  `git rev-parse
