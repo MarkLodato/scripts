@@ -2,23 +2,37 @@
 #
 # Show git branches and how old each is, sorted by commit date.
 #
-# Does not show branches that git considers "months" or "years" old, except the
-# current branch.  Also does not show any branch beginning with "junk/".
+# Does not show old branches or those beginning with "junk/", but always shows
+# the current branch.
 #
 # Copyright 2013 Mark Lodato <lodato@google.com>
 # Released under the MIT license; see LICENSE for details.
 
-current_branch="$(git symbolic-ref --short -q HEAD)"
-git for-each-ref --sort=committerdate refs/heads \
-  --format='%(refname:short)|%(committerdate:relative)' \
-  | perl -ne "print if not m{^junk/|(year|month)s? ago} or m{^$current_branch}" \
-  | while IFS='|' read branch date
+# TODO Read max_age from git-config.  Validate it by comparing to --since=now.
+# TODO Read max_age from command-line argument.  Validate it as above.
+max_age='3 months ago'
+# TODO Read ignore_re from git-config.
+# TODO Read ignore_re from command-line argument.
+ignore_re='^junk/'
+
+min_timestamp=$(git rev-parse --since="$max_age" | sed -e 's/^--max-age=//')
+current_branch=$(git symbolic-ref --short -q HEAD)
+
+git for-each-ref refs/heads --sort=committerdate \
+  --format='%(refname:short)|%(committerdate:raw)|%(committerdate:relative)' \
+  | while IFS='|' read branch timestamp relative_date
     do
+      # $timestamp is of the form "12345 -0500"; we only want the first part.
+      if [[ $branch != $current_branch &&
+            ( ${timestamp% *} -lt $min_timestamp ||
+              ( -n $ignore_re && $branch =~ $ignore_re ) ) ]]; then
+        continue
+      fi
       start='  '
       end=''
       if [[ $branch = $current_branch ]]; then
         start='* \e[32m'
         end='\e[0m'
       fi
-      printf "$start%-30s %s$end\\n" "$branch" "$date"
+      printf "$start%-30s %s$end\\n" "$branch" "$relative_date"
     done
