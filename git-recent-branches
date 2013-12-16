@@ -10,6 +10,7 @@ Show branches and how old each is, sorted by commit date.
 Default values for the below flags can be set in .gitconfig with
 'recent-branch.since' or 'recent-branch.ignore'.
 --
+a,all           show all branches, overriding --since and --ignore
 since=          ignore branches older than this date
 ignore=         ignore branches whose names match this GNU regexp
 "
@@ -24,6 +25,7 @@ ignore_re=$(git config --get recent-branches.ignore)
 while test $# != 0
 do
   case "$1" in
+    -a|--all) since= ignore_re= ;;
     --since) since="$2" ; shift ;;
     --ignore) ignore_re="$2" ; shift ;;
     --) shift ; break ;;
