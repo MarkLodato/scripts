@@ -1,0 +1,182 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use Getopt::Long qw(:config no_auto_abbrev pass_through);
+use Term::ReadKey;
+use Pod::Usage;
+
+my $line_char = '+';
+my $enable_color = (-t STDOUT);  # --color=auto
+my $divisor = 10.0;
+my $seq_width = 4;
+my $time_width  = 4;
+
+GetOptions(
+    'char=s' => \$line_char,
+    'color:s' => sub {  # --color means --color=always
+        my ($opt_name, $_) = @_;
+        if (/^(|y|yes|always|force)$/) {
+            $enable_color = 1;
+        } elsif (/^(n|no|none|never)$/) {
+            $enable_color = 0;
+        } elsif (/^(auto|tty|if-tty)$/) {
+            $enable_color = (-t STDOUT);
+        } else {
+            print STDERR "invalid argument '$_' for --color\n";
+            print STDERR "Valid arguments are:\n";
+            print STDERR "  - 'always', 'y', 'yes', 'force'\n";
+            print STDERR "  - 'never', 'n', 'no', 'none'\n";
+            print STDERR "  - 'auto', 'tty', 'if-tty'\n";
+            exit 1;
+        }
+    },
+    'nocolor' => sub { $enable_color = 0; },
+    'no-color' => sub { $enable_color = 0; },
+    'divisor=f' => \$divisor,
+    'seq-width=i' => \$seq_width,
+    'time-width=i' => \$time_width,
+    'man' => sub { pod2usage(-exitval => 0, -verbose => 2); },
+    'help|h|?' => sub {
+        pod2usage(
+            -exitval => 'NOEXIT',
+            -verbose => 99,
+            -sections => 'SYNOPSIS|DESCRIPTION|OPTIONS',
+        );
+        print "Options for ping:\n", `ping -h 2>&1`;
+        exit 0;
+    },
+) or pod2usage(2);
+
+# Prevent the first '--' from being passed to the subprocess.
+# I removed this feature, but since it took me a short while to figure out how
+# to do this, I'd rather not delete the code.
+#my $count = 0;
+#@ARGV = grep {
+#    $count += ($_ eq '--');
+#    ($_ ne '--') || ($count > 1);
+#} @ARGV;
+
+my $RESET_COLOR = $enable_color ? "\e[m" : '';
+my $ERROR_COLOR = $enable_color ? "\e[31m" : '';  # red foreground
+
+sub print_line {
+    printf "%s%${seq_width}s %${time_width}s %s %s\n", @_;
+}
+
+sub error {
+    my ($seq, $msg) = @_;
+    print_line $ERROR_COLOR, $seq, '', '  ', $msg . $RESET_COLOR;
+}
+
+sub success {
+    my ($seq, $time_in_ms) = @_;
+    my $length = 1 + ($time_in_ms / $divisor);
+    my ($wchar, $hchar, $wpixels, $hpixels) = GetTerminalSize();
+    my $max_length = $wchar - $seq_width - $time_width - 5;
+    $length = $max_length if $length > $max_length;
+    print_line '', $seq, $time_in_ms, 'ms', $line_char x $length;
+}
+
+$| = 1;  # flush after each print
+my $last_seq = 0;
+
+open(PIPE, '-|', 'ping', '-n', @ARGV) or die "error running ping: $!";
+while (<PIPE>) {
+    if (/icmp_seq=(\d+) (.*)/) {
+        my $seq = $1;
+        my $rest = $2;
+        for (my $i = $last_seq + 1; $i < $seq; $i++) {
+            error $i, "dropped";
+        }
+        if ($rest =~ /time=([\d.]+) ms/) {
+            my $time_in_ms = int($1);
+            success $seq, $time_in_ms;
+        } else {
+            error $seq, $rest;
+        }
+        $last_seq = $seq;
+    }
+}
+
+__END__
+
+=head1 NAME
+
+gping - graphical wrapper around ping(1)
+
+=head1 SYNOPSIS
+
+gping [OPTIONS] <args-for-ping>
+
+=head1 DESCRIPTION
+
+Wrapper around ping(1) to print the times graphically.
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<-h>,B<--help>
+
+Print a usage statement and exit.
+
+=item B<--man>
+
+Print the man page and exit.
+
+=item B<--char>=CHAR
+
+Use CHAR as the graph character; default '+'.
+
+=item B<--color>[=WHEN]
+
+Colorize the output.  By default, the color is enabled only if standard output
+is connected to a TTY.  B<--color> or B<--color=always> unconditionally
+enables color; B<--color=never> unconditionally disables it; B<--color=auto>
+restores the default behavior.
+
+=item B<--nocolor>,B<--no-color>
+
+Same as B<--color=never>.
+
+=item B<--divisor>=N
+
+Scale the graph to one char for every N milliseconds of ping time; default 10.
+
+=item B<--seq-width>=N
+
+Use N characters for the sequence number column; deafult 4.
+
+=item B<--time-width>=N
+
+Use N characters for the time column; deafult 4.
+
+=back
+
+All other options and positional arguments are passed directly to ping(1).
+The '-n' argument is always passed, even if not included on the command line.
+
+=head1 COPYRIGHT
+
+The MIT License (MIT)
+
+Copyright (c) 2014 Mark Lodato <lodato@google.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
