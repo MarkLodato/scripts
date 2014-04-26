@@ -16,7 +16,8 @@ my $time_width  = 4;
 GetOptions(
     'char=s' => \$line_char,
     'color:s' => sub {  # --color means --color=always
-        my ($opt_name, $_) = @_;
+        my $opt_name;
+        ($opt_name, $_) = @_;
         if (/^(|y|yes|always|force)$/) {
             $enable_color = 1;
         } elsif (/^(n|no|none|never)$/) {
