@@ -22,7 +22,7 @@ W               implicitly turn wildcards in <dest> into \${1} .. \${N}
 emulate sh
 autoload zmv
 
-. git-sh-setup
+. "$(git --exec-path)/git-sh-setup"
 require_work_tree
 
 interactive=

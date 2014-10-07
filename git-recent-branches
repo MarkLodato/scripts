@@ -17,7 +17,7 @@ ignore=         ignore branches whose names match this GNU regexp
 
 SUBDIRECTORY_OK=Yes
 OPTIONS_KEEPDASHDASH=
-. git-sh-setup
+. "$(git --exec-path)/git-sh-setup"
 
 since=$(git config --get recent-branches.since)
 ignore_re=$(git config --get recent-branches.ignore)
