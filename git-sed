@@ -90,5 +90,5 @@ if (( !has_script )); then
 fi
 
 git ls-files $error_unmatch -z -- "$@" \
-    | xargs --null --no-run-if-empty $dry_run sed "${sed_args[@]}" \
+    | xargs --null --no-run-if-empty $dry_run sed "${sed_args[@]}" -- \
     | git_pager
