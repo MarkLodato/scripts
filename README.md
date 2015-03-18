@@ -7,23 +7,6 @@ their own repository each.
 
 Prints out the xterm 256 color chart.
 
-### gping
-
-Simple graphical wrapper around ping.
-
-<pre>
-$ ./gping 192.168.1.1
-   1    4 ms +
-   2    3 ms +
-   3    7 ms +
-   4  102 ms +++++++++++
-   5  445 ms +++++++++++++++++++++++++++++++++++++++++++++
-   6    3 ms +
-   7         dropped
-   8         dropped
-   9    5 ms +
-</pre>
-
 ### git-alias
 
 Prints git aliases.  The name argument can be used to filter the results.
@@ -75,6 +58,23 @@ of the following:
 
     $ git zmv '(*).markdown' '$1.md'
     $ git mmv '*.markdown' '*.md'
+
+### gping
+
+Simple graphical wrapper around ping.
+
+<pre>
+$ ./gping 192.168.1.1
+   1    4 ms +
+   2    3 ms +
+   3    7 ms +
+   4  102 ms +++++++++++
+   5  445 ms +++++++++++++++++++++++++++++++++++++++++++++
+   6    3 ms +
+   7         dropped
+   8         dropped
+   9    5 ms +
+</pre>
 
 ### pithos-control
 
