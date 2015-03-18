@@ -13,8 +13,8 @@ files to pass to sed.  Advantages over regular sed include:
 * Listing a directory includes all (git-tracked) files in it.
 * Output is sent to the git pager (use 'git --no-pager' to disable).
 
-Note that this filters out anything that is not a regular file, which
-means that symlinks to regular file will NOT be included in the file list.
+Note that this filters out anything that is not a regular file or a symlink to
+a regular file.
 --
 dry-run         print the sed command that would have been run
 error-unmatch   (default) return error if any <file> does not match
