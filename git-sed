@@ -12,6 +12,9 @@ files to pass to sed.  Advantages over regular sed include:
   directory, recursively.
 * Listing a directory includes all (git-tracked) files in it.
 * Output is sent to the git pager (use 'git --no-pager' to disable).
+
+Note that this filters out anything that is not a regular file, which
+means that symlinks to regular file will NOT be included in the file list.
 --
 dry-run         print the sed command that would have been run
 error-unmatch   (default) return error if any <file> does not match
@@ -89,6 +92,15 @@ if (( !has_script )); then
     shift
 fi
 
+# Filters out anything that is not a regular file.  Input and output are both
+# NUL-terminated.
+filter_regular_files() {
+    while IFS= read -d $'\0' -r file; do
+        [[ -f "$file" ]] && printf '%s\0' "$file"
+    done
+}
+
 git ls-files $error_unmatch -z -- "$@" \
+    | filter_regular_files \
     | xargs --null --no-run-if-empty $dry_run sed "${sed_args[@]}" -- \
     | git_pager
