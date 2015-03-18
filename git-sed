@@ -1,0 +1,94 @@
+#!/bin/bash
+# Copyright 2015 Mark Lodato <lodato@google.com>
+# Released under the MIT license; see LICENSE for details.
+
+SUBDIRECTORY_OK=Yes
+OPTIONS_SPEC="\
+git sed <sed-args> <script-if-no-other-script> [--] [<file>...]
+
+Similar to git-grep, git-sed uses git to generate the candidate list of
+files to pass to sed.  Advantages over regular sed include:
+* An empty list of files means all git-tracked files within the current
+  directory, recursively.
+* Listing a directory includes all (git-tracked) files in it.
+* Output is sent to the git pager (use 'git --no-pager' to disable).
+--
+dry-run         print the sed command that would have been run
+error-unmatch   (default) return error if any <file> does not match
+
+ GNU sed options
+n,quiet         suppress automatic printing of pattern space
+silent*         same as --quiet
+e,expression=   add script to the commands to be executed
+f,file=         add contents of file to the commands to be executed
+follow-symlinks follow symlinks when processing in place
+i,in-place?     edit files in place (makes backup if SUFFIX supplied)
+l,line-length   desired line-wrap length for the \`l' command
+posix           disable all GNU extensions
+r,regexp-extended use extended regular expressions in the script
+s,separate      consider files as separate rather than as a single continuous long stream
+u,unbuffered    load minimal amounts of data from the input files and flush the output buffers more often
+z,null-data     separate lines by NUL characters
+version         output version information and exit
+"
+
+# We need to pass --stuck-long to git-rev-parse in order to uniqely identify
+# whether or not -i/--in-place took an argument.  Unfortunately git-sh-setup
+# does not have an option to pass --stuck-long to git-rev-parse, so we have to
+# fool it into letting us handle $@.  We cannot just unset OPTIONS_SPEC since
+# that causes it to interpret the -h option.  Instead, we do two passes of
+# git-rev-parse, the first time passing in all the arguments as positionals.
+set -- -- "$@"
+. "$(git --exec-path)/git-sh-setup"
+require_work_tree
+shift  # leading -- that was added above
+
+set -o pipefail
+
+# Normalize the options, exiting on invalid args or -h.
+eval "$(
+    echo "$OPTIONS_SPEC" |
+        git rev-parse --parseopt --stuck-long -- "$@" ||
+        echo exit $?
+)"
+
+# Parse the options.
+declare -i has_script=0
+declare dry_run=""
+declare error_unmatch="--error-unmatch"
+while (( $# > 0 )); do
+    case "$1" in
+        --)
+            shift
+            break
+            ;;
+        --error-unmatch|--no-error-unmatch)
+            error_unmatch="$1"
+            ;;
+        --dry-run)
+            dry_run="echo"
+            ;;
+        --expression=*|--file=*)
+            has_script=1
+            sed_args=( "${sed_args[@]}" "$1" )
+            ;;
+        *)
+            sed_args=( "${sed_args[@]}" "$1" )
+            ;;
+    esac
+    shift
+done
+
+# If there was no -e or -f flag, then the first positional argument is the
+# script, not a filename.
+if (( !has_script )); then
+    if (( $# == 0 )); then
+        die "ERROR: missing script"
+    fi
+    sed_args=( "${sed_args[@]}" --expression="$1" )
+    shift
+fi
+
+git ls-files $error_unmatch -z -- "$@" \
+    | xargs --null --no-run-if-empty $dry_run sed "${sed_args[@]}" \
+    | git_pager
