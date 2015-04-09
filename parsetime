@@ -1,0 +1,76 @@
+#!/usr/bin/perl
+# Copyright 2015 Mark Lodato <lodato@google.com>
+# Released under the MIT license; see LICENSE for details.
+
+use warnings;
+use strict;
+
+use Date::Manip;  # sudo aptitude install libdate-manip-perl
+use Getopt::Long;
+use Pod::Usage;
+
+my $format = '%s';
+GetOptions(
+  'format=s' => \$format,
+  'help|?' => sub { pod2usage(1); },
+  'man' => sub { pod2usage(-exitval => 0, -verbose => 2); },
+) or pod2usage(2);
+pod2usage(2) if @ARGV != 1;
+
+my $s = shift;
+
+my $date = new Date::Manip::Date;
+my $err = $date->parse($s);
+$\ = "\n";
+if ($err) {
+  print STDERR $date->err();
+  exit 1;
+}
+die $err if $err;
+print $date->printf($format);
+
+__END__
+
+=head1 NAME
+
+parsetime - Parse a human-readable timestamp
+
+=head1 SYNOPSIS
+
+parsetime [--format=<format>] <timestamp>
+
+=head1 DESCRIPTION
+
+Parse a human-readadable timestamp and print the result in the user specified
+format, which defaults to the POSIX timestamp.
+
+Examples:
+
+    $ parsetime now
+    1428616616
+    $ parsetime 'apr 1 2015 pdt'
+    1427871600
+    $ parsetime 'apr 1 2015 utc'
+    1427846400
+    $ parsetime 'epoch 12345'
+    12345
+    $ parsetime -f %c 'apr 1 at noon'
+    Wed Apr  1 12:00:00 2015
+
+=head1 OPTIONS
+
+=over 20
+
+=item B<--format>=<format>
+
+strftime-style format string.  Default is '%s', meaning POSIX timestamp.
+
+=item B<--help>
+
+Show help message and exit.
+
+=item B<--man>
+
+Show full man page.
+
+=back
