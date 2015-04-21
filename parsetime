@@ -15,9 +15,9 @@ GetOptions(
   'help|?' => sub { pod2usage(1); },
   'man' => sub { pod2usage(-exitval => 0, -verbose => 2); },
 ) or pod2usage(2);
-pod2usage(2) if @ARGV != 1;
 
-my $s = shift;
+my $s = join(' ', @ARGV);
+pod2usage(2) if not $s;
 
 my $date = new Date::Manip::Date;
 my $err = $date->parse($s);
@@ -48,13 +48,13 @@ Examples:
 
     $ parsetime now
     1428616616
-    $ parsetime 'apr 1 2015 pdt'
+    $ parsetime apr 1 2015 pdt
     1427871600
-    $ parsetime 'apr 1 2015 utc'
+    $ parsetime apr 1 2015 utc
     1427846400
-    $ parsetime 'epoch 12345'
+    $ parsetime epoch 12345
     12345
-    $ parsetime -f %c 'apr 1 at noon'
+    $ parsetime -f %c apr 1 at noon
     Wed Apr  1 12:00:00 2015
 
 =head1 OPTIONS
