@@ -79,17 +79,14 @@ $ ./gping 192.168.1.1
 ### parsetime
 
 Parse a human-readable time and print the POSIX timestamp (or any other format).
+Can also be used to convert timezones.
 
     $ parsetime now
     1428616616
-    $ parsetime 'apr 1 2015 pdt'
+    $ parsetime apr 1 2015 pdt
     1427871600
-    $ parsetime 'apr 1 2015 utc'
-    1427846400
-    $ parsetime 'epoch 12345'
-    12345
-    $ parsetime -f %c 'apr 1 at noon'
-    Wed Apr  1 12:00:00 2015
+    $ parsetime epoch 1427871600 -f '%c %z' -z EDT
+    Wed Apr  1 03:00:00 2015 -0400
 
 ### pithos-control
 

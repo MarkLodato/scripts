@@ -6,12 +6,15 @@ use warnings;
 use strict;
 
 use Date::Manip;  # sudo aptitude install libdate-manip-perl
+use Date::Manip::TZ;
 use Getopt::Long;
 use Pod::Usage;
 
 my $format = '%s';
+my $output_timezone = '';
 GetOptions(
   'format=s' => \$format,
+  'z|tz|timezone=s' => \$output_timezone,
   'help|?' => sub { pod2usage(1); },
   'man' => sub { pod2usage(-exitval => 0, -verbose => 2); },
 ) or pod2usage(2);
@@ -19,14 +22,34 @@ GetOptions(
 my $s = join(' ', @ARGV);
 pod2usage(2) if not $s;
 
-my $date = new Date::Manip::Date;
-my $err = $date->parse($s);
 $\ = "\n";
-if ($err) {
-  print STDERR $date->err();
+
+sub exit_with_error {
+  print STDERR @_;
   exit 1;
 }
-die $err if $err;
+
+# Parse the date.
+my $date = new Date::Manip::Date;
+my $err = $date->parse($s);
+exit_with_error($date->err()) if $err;
+
+# Convert timezones if requested.
+if ($output_timezone ne "") {
+  my $tz = new Date::Manip::TZ;
+  my $zone;
+  if ($output_timezone eq "local") {
+    $zone = $tz->curr_zone();
+  } else {
+    $zone = $tz->zone($output_timezone);
+  }
+  exit_with_error("Time zone not found: $output_timezone")
+      if not defined($zone) or $zone eq "";
+  $err = $date->convert($zone);
+  exit_with_error($date->err()) if $err;
+}
+
+# Print the date.
 print $date->printf($format);
 
 __END__
@@ -37,12 +60,13 @@ parsetime - Parse a human-readable timestamp
 
 =head1 SYNOPSIS
 
-parsetime [--format=<format>] <timestamp>
+parsetime [-f <format>] [-tz <output_timezone>] <timestamp>
 
 =head1 DESCRIPTION
 
 Parse a human-readadable timestamp and print the result in the user specified
-format, which defaults to the POSIX timestamp.
+format, which defaults to the POSIX timestamp.  Include the input timezone in
+the string; if not specified, it is interpreted in the local timezone.
 
 Examples:
 
@@ -57,6 +81,19 @@ Examples:
     $ parsetime -f %c apr 1 at noon
     Wed Apr  1 12:00:00 2015
 
+Examples with timezones, where the local time is EDT (-0400):
+
+    $ parsetime -f '%c %z' 'apr 1 at noon'
+    Wed Apr  1 12:00:00 2015 -0400
+    $ parsetime -f '%c %z' 'apr 1 at noon' -z pdt
+    Wed Apr  1 09:00:00 2015 -0700
+    $ parsetime -f '%c %z' 'apr 1 at noon gmt'
+    Wed Apr  1 12:00:00 2015 +0000
+    $ parsetime -f '%c %z' 'apr 1 at noon gmt' -z pdt
+    Wed Apr  1 05:00:00 2015 -0700
+    $ parsetime -f '%c %z' 'apr 1 at noon gmt' -z local
+    Wed Apr  1 08:00:00 2015 -0400
+
 =head1 OPTIONS
 
 =over 20
@@ -64,6 +101,11 @@ Examples:
 =item B<--format>=<format>
 
 strftime-style format string.  Default is '%s', meaning POSIX timestamp.
+
+=item B<-z>, B<--tz>, B<--timezone>=<output_timezone>
+
+Output timezone; use "local" for the local timezone.  By default, the output
+timezone is the input timezone.
 
 =item B<--help>
 
