@@ -10,7 +10,7 @@ use Date::Manip::TZ;
 use Getopt::Long;
 use Pod::Usage;
 
-my $format = '%s';
+my $format = '%a %Y-%m-%d %H:%M:%S %z %Z (%s)';
 my $output_timezone = '';
 GetOptions(
   'format=s' => \$format,
@@ -71,19 +71,17 @@ the string; if not specified, it is interpreted in the local timezone.
 Examples:
 
     $ parsetime now
-    1428616616
+    Thu 2015-04-30 00:31:46 -0400 EDT (1430368306)
     $ parsetime apr 1 2015 pdt
-    1427871600
-    $ parsetime apr 1 2015 utc
-    1427846400
+    Wed 2015-04-01 00:00:00 -0700 PDT (1427871600)
     $ parsetime epoch 12345
-    12345
-    $ parsetime -f %c apr 1 at noon
-    Wed Apr  1 12:00:00 2015
+    Wed 1969-12-31 22:25:45 -0500 EST (12345)
+    $ parsetime -f %D apr 1 2015
+    04/01/2015
 
 Examples with timezones, where the local time is EDT (-0400):
 
-    $ parsetime -f '%c %z' 'apr 1 at noon'
+    $ parsetime -f '%H:%M %z' 'apr 1 at noon'
     Wed Apr  1 12:00:00 2015 -0400
     $ parsetime -f '%c %z' 'apr 1 at noon' -z pdt
     Wed Apr  1 09:00:00 2015 -0700
@@ -100,7 +98,7 @@ Examples with timezones, where the local time is EDT (-0400):
 
 =item B<--format>=<format>
 
-strftime-style format string.  Default is '%s', meaning POSIX timestamp.
+strftime-style format string.
 
 =item B<-z>, B<--tz>, B<--timezone>=<output_timezone>
 
