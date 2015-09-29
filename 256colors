@@ -46,8 +46,9 @@ print_colors() {
 }
 
 if [[ -n $background && -n $foreground ]]; then
-  echo "ERROR: --background and --foreground are mutually exclusive" >&2
-  exit 1
+  message="This fg=$foreground with bg=$background"
+  printf '\e[38;5;%dm\e[48;5;%dm%s\e[m\n' "$foreground" "$background" "$message"
+  exit 0
 fi
 if [[ -n $foreground ]]; then
   printf '\e[38;5;%dm' "$foreground"
