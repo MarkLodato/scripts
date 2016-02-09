@@ -31,6 +31,16 @@ sub exit_with_error {
 
 # Parse the date.
 my $date = new Date::Manip::Date;
+if ($s =~ /^(\d+)\.?\d*$/) {
+  my $timestamp = $1;
+  # Chop off fractional seconds (ms, ns, us) to get into the range:
+  #     Fri 2128-06-11 04:53:20 -0400 EDT (5000000000)
+  #     Fri 1970-02-27 15:53:20 -0500 EST (5000000)
+  while ($timestamp >= 5000000000) {
+    $timestamp = substr $timestamp, 0, -3;
+  }
+  $s = "epoch $timestamp";
+}
 my $err = $date->parse($s);
 exit_with_error($date->err()) if $err;
 
@@ -68,14 +78,20 @@ Parse a human-readadable timestamp and print the result in the user specified
 format, which defaults to the POSIX timestamp.  Include the input timezone in
 the string; if not specified, it is interpreted in the local timezone.
 
+Pure numbers are interpreted as seconds, milliseconds, microseconds, or
+nanoseconds since the unix epoch.  To force this to be seconds, use "epoch
+<number>".
+
 Examples:
 
     $ parsetime now
     Thu 2015-04-30 00:31:46 -0400 EDT (1430368306)
     $ parsetime apr 1 2015 pdt
     Wed 2015-04-01 00:00:00 -0700 PDT (1427871600)
-    $ parsetime epoch 12345
-    Wed 1969-12-31 22:25:45 -0500 EST (12345)
+    $ parsetime 1234567890
+    Fri 2009-02-13 18:31:30 -0500 EST (1234567890)
+    $ parsetime 1234567890111222
+    Fri 2009-02-13 18:31:30 -0500 EST (1234567890)
     $ parsetime -f %D apr 1 2015
     04/01/2015
 

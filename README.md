@@ -85,7 +85,7 @@ timestamp (or any other format).  Can also be used to convert timezones.
     Thu 2015-04-30 00:31:46 -0400 EDT (1430368306)
     $ parsetime apr 1 2015 pdt
     Wed 2015-04-01 00:00:00 -0700 PDT (1427871600)
-    $ parsetime epoch 1427871600 -f '%c %z' -z EDT
+    $ parsetime 1427871600 -f '%c %z' -z EDT
     Wed Apr  1 03:00:00 2015 -0400
 
 ### pithos-control
