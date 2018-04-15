@@ -1,10 +1,8 @@
 #!/bin/sh
 #
-# A script to control Pithos.  This is easier to use than dbus-send, and it
-# also includes discrete play and pause commands, which are not available
-# directly via dbus.
+# A script to control Pithos.  This is simply a wrapper around dbus-send.
 #
-# Copyright 2013 Mark Lodato <lodato@google.com>
+# Copyright 2018 Mark Lodato <lodato@google.com>
 # Released under the MIT license; see LICENSE for details.
 
 usage() {
@@ -19,13 +17,6 @@ Available Commands:
         pause
         play/pause
         skip
-        love
-        ban
-        tired
-        raise-window
-    Query:
-        is-playing
-        current-song
 EOF
     exit 1
 }
@@ -33,28 +24,19 @@ EOF
 send_command() {
     dbus-send \
         --print-reply \
-        --dest=net.kevinmehall.Pithos \
-        /net/kevinmehall/Pithos \
-        net.kevinmehall.Pithos."$1" \
+        --dest=org.mpris.MediaPlayer2.pithos \
+        /org/mpris/MediaPlayer2 \
+        org.mpris.MediaPlayer2.Player."$1" \
         || exit $?
-}
-
-is_playing() {
-    send_command IsPlaying | grep -q 'boolean true'
 }
 
 test $# -eq 1 || usage
 
 case "$1" in
-    play)         is_playing || send_command PlayPause ;;
-    pause)        is_playing && send_command PlayPause ;;
+    play)         send_command Play ;;
+    pause)        send_command Pause ;;
     play/pause)   send_command PlayPause ;;
-    skip)         send_command SkipSong ;;
-    love)         send_command LoveCurrentSong ;;
-    tired)        send_command TiredCurrentSong ;;
-    ban)          send_command BanCurrentSong ;;
-    raise-window) send_command Present ;;
-    is-playing)   send_command IsPlaying ;;
-    current-song) send_command GetCurrentSong ;;
+    skip)         send_command Next ;;
+    # See https://github.com/pithos/pithos/wiki/DBus-Interfaces for more.
     *)            usage ;;
 esac
