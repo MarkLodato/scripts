@@ -1,0 +1,58 @@
+#!/bin/bash
+# Prints a text diff of two PDF files.
+# USAGE: pdf-text-diff [-layout|-raw] [DIFF_FLAGS] <file.pdf> <file.pdf>
+
+set -o errexit
+set -o nounset
+
+main() {
+  BASENAME=$(basename "$0")
+  PDF_FLAGS=()
+  DIFF_FLAGS=()
+  FILES=()
+  while (( $# > 0 )); do
+    case "$1" in
+      -layout) PDF_FLAGS+=( -layout ) ;;
+      -raw) PDF_FLAGS+=( -raw ) ;;
+      -*) DIFF_FLAGS+=( "$1" ) ;;
+      *) FILES+=( "$1" )
+    esac
+    shift
+  done
+  if (( ${#FILES[@]} != 2 )); then
+    die "USAGE: $BASENAME [-layout|-raw] [DIFF_FLAGS] <file.pdf> <file.pdf>"
+  fi
+  set -- "${FILES[@]}"
+
+  tempdir=$(mktemp -d "$BASENAME.XXXXXXXX")
+  trap "rm -rf '$tempdir'" exit
+  mkdir "${tempdir}/a"
+  mkdir "${tempdir}/b"
+
+  A="$tempdir/a/$(basename "$1")"
+  B="$tempdir/b/$(basename "$2")"
+
+  pdftotext "${PDF_FLAGS[@]}" "$1" "$A"
+  pdftotext "${PDF_FLAGS[@]}" "$2" "$B"
+
+  diff-prog "$A" "$B"
+}
+
+die() {
+  echo "$*" >&2
+  exit 1
+}
+
+pdf-to-text() {
+  pdftotext "${PDF_FLAGS[@]}" "$1"
+}
+
+diff-prog() {
+  if which git >/dev/null 2>/dev/null; then
+    git diff --no-index --no-prefix "${DIFF_FLAGS[@]}" "$@"
+  else
+    diff "${DIFF_FLAGS[@]}" "$@"
+  fi
+}
+
+main "$@"
