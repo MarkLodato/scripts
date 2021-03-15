@@ -1,0 +1,3 @@
+#!/bin/bash
+# Removes smart quotes with normal ASCII dumb quotes for the given files.
+sed -i -e "y/‘’“”/''\"\"/" "$@"
