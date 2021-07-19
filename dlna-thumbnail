@@ -1,0 +1,19 @@
+#!/bin/bash
+USAGE="Generates a 160x160 thumbnail of a video at the given timestamp.
+
+USAGE: ${0##*/} <input-file> [<HH>:]<MM>:<SS> [<output-file>]"
+set -o nounset
+set -o errexit
+if (( $# < 2 || $# > 3 )); then
+  echo "$USAGE" >&2
+  exit 1
+fi
+input=$1
+time=$2
+output=${3:-${input%.*}.jpg}
+ffmpeg \
+  -i "$input" \
+  -ss "$time" \
+  -frames:v 1 \
+  -vf 'scale=160:160:force_original_aspect_ratio=increase,crop=160:160' \
+  "$output"
