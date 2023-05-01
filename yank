@@ -1,0 +1,18 @@
+#!/bin/bash
+# Copy FILE to the clipboard, or stdin if file is not specified.
+# USAGE: yank [FILE...]
+
+set -o nounset
+set -o errexit
+
+readonly MAXLEN=74994
+BUFFER=$(head -c $((MAXLEN+1)) "$@")
+
+if (( ${#BUFFER} > $MAXLEN )); then
+  echo "WARNING: only first $MAXLEN bytes are copied" >&2
+  BUFFER=${BUFFER:0:$MAXLEN}
+fi
+
+printf '\e]52;c;'
+echo -n "$BUFFER" | base64 -w0
+printf '\e\\'
